@@ -1,1 +1,1 @@
-text
+create a file ./hi.txt
