@@ -1,1 +1,1 @@
-create a file ./hi.txt
+add to the file ./hi.txt puto
