@@ -111,4 +111,4 @@ async function writeStreamOptimized(times) {
   });
 };
 
-writeStreamOptimized(MILLION*10);
+writeStreamOptimized(MILLION);
