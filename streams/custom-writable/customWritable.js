@@ -9,6 +9,7 @@ class FileWriteStream extends Writable {
     this.fd = null;
     this.chunks = [];
     this.chunksSize = 0;
+    this.writesCount = 0;
   }
 
   // Runs after the constructor and halts other methods until it completes
@@ -34,9 +35,9 @@ class FileWriteStream extends Writable {
         if (error) {
           return callback(error);
         }
-
         this.chunks = [];
         this.chunksSize = 0;
+        ++this.writesCount;
         callback();
       });
     } else {
@@ -44,16 +45,61 @@ class FileWriteStream extends Writable {
     }
   }
 
-  _final() {}
+  // runs after stream is done
+  _final(callback) {
+    fs.write(this.fd, Buffer.concat(this.chunks), (error) => {
+      if (error) return callback(error);
 
-  _destroy() {}
+      this.chunks = [];
+      ++this.writesCount;
+      callback();
+    });
+  }
+
+  // runs after final
+  _destroy(error, callback) {
+    console.log("Number of writes: ", this.writesCount);
+    if (this.fd) {
+      fs.close(this.fd, (err) => {
+        callback(err || error);
+      });
+    } else {
+      callback(error);
+    }
+  }
 }
 
+console.time("writeMany");
+
+let i = 0;
+let numberOfWrites = 1000000;
+
 const stream = new FileWriteStream({
-  highWaterMark: 1800,
   fileName: "text.txt",
 });
-stream.write(Buffer.from("this is some string"));
-stream.end(Buffer.from("Our last write"));
 
-stream.on("drain", () => {});
+async function writeMany() {
+  while (i < numberOfWrites) {
+    const buff = Buffer.from(` ${i} `, "utf-8");
+
+    // this is our last write
+    if (i === numberOfWrites - 1) {
+      return stream.end(buff);
+    }
+
+    // if stream.write returns false, stop the loop
+    if (!stream.write(buff)) break;
+
+    i++;
+  }
+}
+
+writeMany();
+
+stream.on("drain", () => {
+  writeMany();
+});
+
+stream.on("finish", () => {
+  console.timeEnd("writeMany");
+});
