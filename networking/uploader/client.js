@@ -1,6 +1,15 @@
 const net = require("net");
 const fs = require("fs/promises");
 const path = require("path");
+const process = require("process");
+
+function updateLine(text) {
+  process.stdout.clearLine(0, () => {
+    process.stdout.moveCursor(0, -1, () => {
+      console.log(text);
+    });
+  });
+}
 
 const filePath = process.argv[2];
 if (!filePath) {
@@ -21,10 +30,10 @@ const socket = net.createConnection({ host: "::1", port: 5050 }, async () => {
 
   // reading from the source file
   fileStream.on("data", (data) => {
-    const newProgress = Math.round((fileStream.bytesRead * 100) / fileSize, 0);
+    const newProgress = Math.floor((fileStream.bytesRead * 100) / fileSize);
     if (newProgress !== progress) {
       progress = newProgress;
-      console.log(`Progress: ${progress}%`);
+      updateLine(`Progress: ${progress}%`);
     }
 
     if (!socket.write(data)) {
@@ -37,7 +46,7 @@ const socket = net.createConnection({ host: "::1", port: 5050 }, async () => {
   });
 
   fileStream.on("end", () => {
-    console.log("File uploaded successfully");
+    updateLine("File uploaded successfully");
     socket.end();
   });
 });
