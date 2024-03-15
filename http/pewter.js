@@ -20,20 +20,20 @@ class Pewter {
         });
       };
 
-      res.status = async (statuscode) => {
+      res.status = (statuscode) => {
         res.statusCode = statuscode;
         return res;
       };
 
-      res.json = async (content) => {
+      res.json = (content) => {
+        res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify(content));
-        return res;
       };
 
       if (this.routes[req.method + req.url]) {
         this.routes[req.method + req.url](req, res);
       } else {
-        res.end();
+        res.status(404).json({ message: "Not found" });
       }
     });
   }
