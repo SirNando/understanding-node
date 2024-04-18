@@ -4,14 +4,12 @@ const { argv } = require("process");
 const { spawn } = require("child_process");
 const fs = require("fs");
 
-const filePath = argv[2];
+let filePath = argv[2];
+if (!filePath) {
+  filePath = "./dest.txt";
+}
 
-const numberFormatter = spawn("node", [
-  "number_formatter.js",
-  filePath,
-  "$",
-  ",",
-]);
+const numberFormatter = spawn("./number_formatter.exe", [filePath, "$", ","]);
 
 numberFormatter.stdout.on("data", (data) => {
   console.log(`stdout: ${data}`);
